@@ -31,6 +31,8 @@ Stop round-tripping through a slow editor extension. Open a resume, talk to Clau
 - A terminal with Kitty graphics support — [Ghostty](https://ghostty.org) or
   [kitty](https://sw.kovidgoyal.org/kitty/)
 - [`tmux`](https://github.com/tmux/tmux) — `brew install tmux`
+- [`chafa`](https://hpjansson.org/chafa/) ≥ 1.14 — `brew install chafa`
+  (renders the image as Kitty Unicode placeholders so it stays inside the tmux pane)
 - A TeX distribution with `latexmk` (e.g. [TeX Live](https://tug.org/texlive/))
 - [`pdftoppm`](https://poppler.freedesktop.org/) — `brew install poppler`
 - [Claude Code](https://claude.com/claude-code) on your `PATH` (`claude`)
@@ -80,12 +82,14 @@ PDF re-renders automatically.
                                                        │
                                               pdftoppm │ → PNG
                                                        ▼
-                                      Kitty graphics protocol → terminal pane
+                                  chafa → Kitty graphics → terminal pane
 ```
 
 A file watcher debounces saves, recompiles into the contained build directory,
-rasterizes page 1, and streams it to the pane. Inside tmux, the image escape
-codes are wrapped for passthrough so they survive the multiplexer.
+rasterizes page 1 with `pdftoppm`, and renders it with `chafa`. Inside tmux,
+chafa emits the image as **Kitty Unicode placeholders** — the image becomes
+real text cells, so tmux positions and clips it to the preview pane instead of
+painting over the Claude pane (which is what naive graphics passthrough does).
 
 ## Install
 
