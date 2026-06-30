@@ -45,6 +45,20 @@ final class AppState: ObservableObject {
         folder = FileManager.default.fileExists(atPath: def.path) ? def : home
         sortMode = SortMode(rawValue: UserDefaults.standard.string(forKey: "sortMode") ?? "") ?? .modified
         rescan()
+        chat.onTurnComplete = { [weak self] in self?.rescan() } // agent may have changed files
+    }
+
+    func organizeLibrary() {
+        guard chat.ready else { return }
+        chat.configureFolder(folder)
+        selected = nil; pdfURL = nil; compileError = nil; pageCount = 0; watcher?.stop()
+        chat.send(
+            "Organize the LaTeX resumes in this folder into a clean structure: group related " +
+            "resumes into subfolders by their target (company, role, scholarship, hackathon, or " +
+            "a general base), using clear human-readable folder names. Use mkdir and mv to create " +
+            "folders and move the .tex files. Do not change the contents of any resume, and do not " +
+            "touch hidden folders or build artifacts. When finished, give a short summary of the new layout."
+        )
     }
 
     func setFolder(_ url: URL) {
@@ -55,6 +69,65 @@ final class AppState: ObservableObject {
     func rescan() {
         tree = FileTree.build(folder)
         sortTree()
+        buildIndex()
+    }
+
+    // MARK: ranked search (fuzzy name + content)
+
+    private var indexNodes: [FileNode] = []
+    private var contentCache: [String: (mtime: Double, text: String)] = [:]
+
+    private func buildIndex() {
+        var nodes: [FileNode] = []
+        func walk(_ ns: [FileNode]) {
+            for n in ns {
+                if n.isDir { if let k = n.children { walk(k) } } else { nodes.append(n) }
+            }
+        }
+        walk(tree)
+        indexNodes = nodes
+        for n in nodes {
+            let key = n.url.path
+            let m = mtime(n.url).timeIntervalSince1970
+            if let c = contentCache[key], c.mtime == m { continue }
+            let text = (try? String(contentsOf: n.url, encoding: .utf8))?.lowercased() ?? ""
+            contentCache[key] = (m, text)
+        }
+    }
+
+    private func isSubsequence(_ q: String, _ s: String) -> Bool {
+        guard !q.isEmpty else { return true }
+        var qi = q.startIndex
+        for ch in s where ch == q[qi] {
+            qi = q.index(after: qi)
+            if qi == q.endIndex { return true }
+        }
+        return false
+    }
+
+    // Ranks resumes by name match (fuzzy/prefix/substring) plus content hits.
+    func search(_ query: String) -> [FileNode] {
+        let terms = query.lowercased().split(separator: " ").map(String.init).filter { !$0.isEmpty }
+        guard !terms.isEmpty else { return indexNodes }
+        let collapsed = terms.joined()
+        var scored: [(node: FileNode, score: Int)] = []
+        for n in indexNodes {
+            let name = n.name.lowercased()
+            let content = contentCache[n.url.path]?.text ?? ""
+            var score = 0
+            if name.hasPrefix(terms[0]) { score += 8 }
+            if isSubsequence(collapsed, name) { score += 5 }
+            for t in terms {
+                if name.contains(t) { score += 6 }
+                else if isSubsequence(t, name) { score += 2 }
+                if content.contains(t) { score += 2 }
+            }
+            if score > 0 { scored.append((n, score)) }
+        }
+        return scored
+            .sorted { $0.score != $1.score ? $0.score > $1.score
+                      : $0.node.name.localizedCaseInsensitiveCompare($1.node.name) == .orderedAscending }
+            .map(\.node)
     }
 
     // MARK: sorting

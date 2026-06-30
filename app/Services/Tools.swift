@@ -4,6 +4,25 @@ import Foundation
 // (TeX Live, nvm node, Homebrew) even when the app is launched from Finder.
 enum Tools {
     private static var cache: [String: String] = [:]
+    private static var _loginPath: String?
+
+    // The user's real PATH from a login shell, so the sidecar and its child
+    // processes (claude, latexmk, pdfinfo) resolve when launched from Finder.
+    static func loginPath() -> String? {
+        if let p = _loginPath { return p }
+        let proc = Process()
+        proc.executableURL = URL(fileURLWithPath: "/bin/zsh")
+        proc.arguments = ["-lc", "echo -n $PATH"]
+        let pipe = Pipe()
+        proc.standardOutput = pipe
+        proc.standardError = Pipe()
+        do { try proc.run() } catch { return nil }
+        proc.waitUntilExit()
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        let path = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let path, !path.isEmpty { _loginPath = path; return path }
+        return nil
+    }
 
     static func find(_ name: String) -> String? {
         if let hit = cache[name] { return hit }

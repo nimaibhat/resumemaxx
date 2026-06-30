@@ -6,6 +6,8 @@ final class ChatViewModel: ObservableObject {
     @Published var ready = false
     @Published var thinking = false
 
+    var onTurnComplete: (() -> Void)?
+
     private let sidecar = Sidecar()
 
     init() {
@@ -22,6 +24,13 @@ final class ChatViewModel: ObservableObject {
             texPath: resume.url.path,
             name: resume.url.lastPathComponent
         )
+    }
+
+    // Point the assistant at a whole folder (e.g. to organize the library).
+    func configureFolder(_ url: URL) {
+        messages.removeAll()
+        thinking = false
+        sidecar.sendConfig(cwd: url.path, texPath: nil, name: url.lastPathComponent)
     }
 
     func send(_ text: String) {
@@ -45,6 +54,7 @@ final class ChatViewModel: ObservableObject {
         case "turn_done":
             thinking = false
             if let i = lastAssistant() { messages[i].streaming = false }
+            onTurnComplete?()  // the agent may have changed files; let the app refresh
         case "error":
             appendToAssistant("\n\n[error] " + (obj["message"] as? String ?? "unknown"))
             thinking = false

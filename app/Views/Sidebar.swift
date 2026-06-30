@@ -31,6 +31,17 @@ struct Sidebar: View {
         HStack(spacing: 6) {
             Wordmark(size: 13)
             Spacer()
+            Button(action: organize) {
+                Image(systemName: "wand.and.stars")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(app.chat.ready ? Theme.textSecondary : Theme.textMuted)
+                    .frame(width: 20, height: 20)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(!app.chat.ready)
+            .help("Organize resumes with the assistant")
+
             Menu {
                 Picker("Sort by", selection: $app.sortMode) {
                     ForEach(SortMode.allCases) { Text($0.label).tag($0) }
@@ -132,18 +143,10 @@ struct Sidebar: View {
     private struct Row: Identifiable { let node: FileNode; let depth: Int; var id: URL { node.url } }
 
     private func rows() -> [Row] {
-        let query = search.trimmingCharacters(in: .whitespaces).lowercased()
+        let query = search.trimmingCharacters(in: .whitespaces)
         if !query.isEmpty {
-            // Flat list of every matching resume across the tree.
-            var out: [Row] = []
-            func collect(_ nodes: [FileNode]) {
-                for n in nodes {
-                    if !n.isDir, n.name.lowercased().contains(query) { out.append(Row(node: n, depth: 0)) }
-                    if let kids = n.children { collect(kids) }
-                }
-            }
-            collect(app.tree)
-            return out
+            // Ranked results (fuzzy name + content), flattened.
+            return app.search(query).map { Row(node: $0, depth: 0) }
         }
         var out: [Row] = []
         func walk(_ nodes: [FileNode], _ depth: Int) {
@@ -194,6 +197,16 @@ struct Sidebar: View {
         panel.allowsMultipleSelection = false
         panel.directoryURL = app.folder
         if panel.runModal() == .OK, let url = panel.url { app.setFolder(url) }
+    }
+
+    private func organize() {
+        let alert = NSAlert()
+        alert.messageText = "Organize resumes with the assistant?"
+        alert.informativeText = "Claude will read the resumes in \"\(app.folder.lastPathComponent)\" and "
+            + "sort them into subfolders by target. It moves files but does not change their contents."
+        alert.addButton(withTitle: "Organize")
+        alert.addButton(withTitle: "Cancel")
+        if alert.runModal() == .alertFirstButtonReturn { app.organizeLibrary() }
     }
 }
 

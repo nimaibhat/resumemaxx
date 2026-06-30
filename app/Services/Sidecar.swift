@@ -18,6 +18,9 @@ final class Sidecar {
         p.executableURL = URL(fileURLWithPath: node)
         p.arguments = [script]
         p.currentDirectoryURL = URL(fileURLWithPath: script).deletingLastPathComponent()
+        var env = ProcessInfo.processInfo.environment
+        if let loginPath = Tools.loginPath() { env["PATH"] = loginPath }
+        p.environment = env
 
         let inPipe = Pipe(), outPipe = Pipe()
         p.standardInput = inPipe
@@ -52,8 +55,10 @@ final class Sidecar {
         inPipe.fileHandleForWriting.write(data)
     }
 
-    func sendConfig(cwd: String, texPath: String, name: String) {
-        send(["type": "config", "cwd": cwd, "texPath": texPath, "name": name])
+    func sendConfig(cwd: String, texPath: String?, name: String) {
+        var obj: [String: Any] = ["type": "config", "cwd": cwd, "name": name]
+        if let texPath { obj["texPath"] = texPath }
+        send(obj)
     }
 
     func sendUser(_ text: String) {
