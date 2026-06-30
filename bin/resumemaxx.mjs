@@ -79,6 +79,27 @@ async function main() {
     return startPreview(resolve(tex));
   }
 
+  // Internal: the branded resumemaxx assistant (Claude Code under the hood).
+  if (cmd === "_assistant") {
+    const tex = args[1] ? resolve(args[1]) : null;
+    const name = tex ? tex.split("/").pop() : "your résumé";
+    const persona =
+      `You are resumemaxx — a focused résumé assistant embedded in a terminal ` +
+      `workspace. You help the user write and refine their LaTeX résumé (${name}). ` +
+      `Keep replies concise and concrete: make bullet points impact- and metric-driven, ` +
+      `fix LaTeX issues, and preserve the document's clean formatting and one-page layout. ` +
+      `The compiled PDF preview is shown live in the pane to the right and refreshes ` +
+      `whenever the .tex is saved.`;
+    const settings = JSON.stringify({
+      statusLine: { type: "command", command: `printf ' ✦ resumemaxx · %s · résumé copilot ' ${JSON.stringify(name)}` },
+    });
+    const r = spawnSync("claude", [
+      "--append-system-prompt", persona,
+      "--settings", settings,
+    ], { stdio: "inherit" });
+    process.exit(r.status ?? 0);
+  }
+
   if (cmd === "doctor") {
     process.exit(report() ? 0 : 1);
   }

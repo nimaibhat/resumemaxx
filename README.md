@@ -86,9 +86,11 @@ Resumes show a marker: `●` already compiled, `○` not yet built.
 
 ### In the workspace
 
-The left pane is Claude Code (running in the resume's folder). The right pane is
-the live preview — edit the `.tex` (yourself or by asking Claude), save, and the
-PDF re-renders automatically. The current keys are always shown in the bottom bar.
+The left pane is the **resumemaxx assistant** — Claude Code under the hood,
+framed as a résumé copilot (it runs in the resume's folder with a résumé-focused
+system prompt). The right pane is the live preview — edit the `.tex` (yourself or
+by asking the assistant), save, and the PDF re-renders automatically. The current
+keys are always shown in the bottom bar.
 
 | Key | Action |
 | --- | --- |
@@ -131,6 +133,13 @@ git clone https://github.com/nimaibhat/resumemaxx
 cd resumemaxx
 npm link        # exposes the `resumemaxx` command
 ```
+
+## Theming
+
+resumemaxx ships a baby-blue → purple theme: a gradient ASCII wordmark on the
+home screen, matching browser highlights, and a colored tmux status bar + pane
+titles in the workspace. It requires a truecolor terminal (Ghostty/kitty
+qualify). Built on your existing Claude Code subscription.
 
 ## License
 
