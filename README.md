@@ -92,13 +92,21 @@ PDF re-renders automatically. The current keys are always shown in the bottom ba
 
 | Key | Action |
 | --- | --- |
-| `F2` | back to the file browser (keeps this workspace open) |
-| `F4` | quit resumemaxx |
+| `Ctrl-X` | back to the file browser (keeps this workspace open) |
 | `Ctrl-b ←/→` | switch panes (or click — mouse is enabled) |
 
-Going back with `F2` leaves the workspace running, so reopening the same resume
-**reattaches** — your Claude conversation is right where you left it. The tmux
-server runs on a private socket, so none of this touches your normal tmux.
+**Zoom & scroll.** Focus the preview pane (click it, or `Ctrl-b →`), then:
+
+| Key | Action |
+| --- | --- |
+| `+` / `-` | zoom in / out (re-rasterized, stays crisp) |
+| `←` `↑` `↓` `→` / `h j k l` | scroll when zoomed |
+| `0` | reset to fit |
+| `[` / `]` | previous / next page |
+
+Going back with `Ctrl-X` leaves the workspace running, so reopening the same
+resume **reattaches** — your Claude conversation is right where you left it. The
+tmux server runs on a private socket, so none of this touches your normal tmux.
 
 ## How it works
 

@@ -38,11 +38,13 @@ function help() {
 
   In the browser:
     ↑↓ / j k   move        ↵ open       ← parent folder
-    /          filter      c clean      ^X quit
+    /          filter      c clean      ^X / q quit
 
   In the workspace (tmux — Claude left, live preview right):
-    F2         back to the file browser      F4   quit resumemaxx
-    Ctrl-b ←→  switch panes (or click)
+    ^X         back to the file browser     ^b ←→  switch panes (or click)
+    Focus the preview pane (click it), then:
+      + / -    zoom            0       reset to fit
+      ← ↑ ↓ →  scroll          [ ]     prev / next page
 
   Requires tmux, chafa, and a graphics terminal (Ghostty/kitty).
 `);
@@ -53,11 +55,10 @@ async function browseLoop(dir) {
   try {
     for (;;) {
       const pick = await runBrowser(dir);
-      if (!pick) break; // Ctrl-X / q
+      if (!pick) break; // Ctrl-X / q quits the app
       if (pick.action === "open-tex") {
-        const result = launchWorkspace(pick.path); // "quit" | "back"
+        launchWorkspace(pick.path); // returns on Ctrl-X (back to browser)
         dir = resolve(pick.path, "..");
-        if (result === "quit") break; // F4 in the workspace
       } else if (pick.action === "preview-pdf") {
         await viewPdf(pick.path);
         dir = resolve(pick.path, "..");
