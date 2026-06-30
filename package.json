@@ -10,7 +10,7 @@
     "node": ">=18"
   },
   "scripts": {
-    "preview": "node bin/preview-test.mjs"
+    "start": "node bin/resumemaxx.mjs"
   },
   "keywords": ["resume", "latex", "tui", "terminal", "claude-code", "preview"],
   "license": "MIT"
