@@ -2,6 +2,7 @@ import SwiftUI
 
 struct Sidebar: View {
     @ObservedObject var app: AppState
+    @ObservedObject var chat: ChatViewModel
     @State private var expanded: Set<URL> = []
     @State private var didInit = false
     @State private var search = ""
@@ -36,15 +37,15 @@ struct Sidebar: View {
                     Image(systemName: "wand.and.stars").font(.system(size: 10, weight: .medium))
                     Text("Organize").font(.system(size: 11, weight: .medium))
                 }
-                .foregroundStyle(app.chat.ready ? Theme.accent : Theme.textMuted)
+                .foregroundStyle(chat.ready ? Theme.accent : Theme.textMuted)
                 .padding(.horizontal, 7)
                 .frame(height: 22)
-                .background(app.chat.ready ? Theme.accent.opacity(0.12) : Color.clear)
+                .background(chat.ready ? Theme.accent.opacity(0.12) : Color.clear)
                 .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .disabled(!app.chat.ready)
+            .disabled(!chat.ready)
             .help("Let the assistant sort your resumes into folders by target")
 
             Menu {
@@ -125,23 +126,78 @@ struct Sidebar: View {
 
     // MARK: tree
 
+    @ViewBuilder
     private var tree: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 0) {
-                ForEach(rows()) { row in
-                    FileRow(
-                        node: row.node,
-                        depth: row.depth,
-                        isExpanded: expanded.contains(row.node.url),
-                        isSelected: app.selected?.url == row.node.url,
-                        onTap: { tap(row.node) }
-                    )
-                    .contextMenu { menu(row.node) }
+        let isSearching = !search.trimmingCharacters(in: .whitespaces).isEmpty
+        if !app.hasResumes && !isSearching {
+            emptyState
+        } else {
+            let r = rows()
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 0) {
+                    if r.isEmpty {
+                        Text("No matches")
+                            .font(.system(size: 12))
+                            .foregroundStyle(Theme.textMuted)
+                            .padding(.horizontal, 12).padding(.top, 10)
+                    }
+                    ForEach(r) { row in
+                        FileRow(
+                            node: row.node,
+                            depth: row.depth,
+                            isExpanded: expanded.contains(row.node.url),
+                            isSelected: app.selected?.url == row.node.url,
+                            onTap: { tap(row.node) }
+                        )
+                        .contextMenu { menu(row.node) }
+                    }
                 }
+                .padding(.vertical, 4)
             }
-            .padding(.vertical, 4)
+            .scrollContentBackground(.hidden)
+            .background(Theme.panel)
         }
-        .scrollContentBackground(.hidden)
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "tray")
+                .font(.system(size: 26))
+                .foregroundStyle(Theme.textMuted)
+            Text("No resumes here")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(Theme.textSecondary)
+            Text("Create a resume in this folder, or open one that already has .tex files.")
+                .font(.system(size: 11))
+                .foregroundStyle(Theme.textMuted)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+            VStack(spacing: 7) {
+                Button { app.newResume(in: nil) } label: {
+                    Text("New Resume")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                        .background(Theme.accent)
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
+                }
+                .buttonStyle(.plain)
+                Button(action: pickFolder) {
+                    Text("Open Folder")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Theme.textSecondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                        .background(Theme.elevated)
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.top, 4)
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .background(Theme.panel)
     }
 

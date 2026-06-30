@@ -5,7 +5,7 @@ struct ContentView: View {
 
     var body: some View {
         HSplitView {
-            Sidebar(app: app)
+            Sidebar(app: app, chat: app.chat)
                 .frame(minWidth: 200, idealWidth: 240, maxWidth: 360)
 
             ChatPanel(app: app, chat: app.chat)

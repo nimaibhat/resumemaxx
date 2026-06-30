@@ -100,6 +100,8 @@ final class AppState: ObservableObject {
     private var indexNodes: [FileNode] = []
     private var contentCache: [String: (mtime: Double, text: String)] = [:]
 
+    var hasResumes: Bool { !indexNodes.isEmpty }
+
     private func buildIndex() {
         var nodes: [FileNode] = []
         func walk(_ ns: [FileNode]) {
