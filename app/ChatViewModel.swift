@@ -60,7 +60,7 @@ final class ChatViewModel: ObservableObject {
         case "tool":
             let name = obj["name"] as? String ?? "tool"
             let summary = obj["summary"] as? String ?? ""
-            addTool([name, summary].filter { !$0.isEmpty }.joined(separator: " "))
+            addTool(ToolUse(name: name, summary: summary))
         case "turn_done":
             thinking = false
             if let i = lastAssistant() { messages[i].streaming = false }
@@ -85,11 +85,11 @@ final class ChatViewModel: ObservableObject {
         }
     }
 
-    private func addTool(_ label: String) {
+    private func addTool(_ tool: ToolUse) {
         if let i = lastAssistant() {
-            messages[i].tools.append(label)
+            messages[i].tools.append(tool)
         } else {
-            messages.append(ChatMessage(role: .assistant, tools: [label], streaming: true))
+            messages.append(ChatMessage(role: .assistant, tools: [tool], streaming: true))
         }
     }
 }

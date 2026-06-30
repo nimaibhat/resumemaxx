@@ -26,11 +26,14 @@ struct PreviewColumn: View {
                 .font(.system(size: 11))
                 .foregroundStyle(app.status == "compile error" ? Theme.danger : Theme.textMuted)
             if app.pageCount > 1 && app.compileError == nil {
-                Label("\(app.pageCount) pages", systemImage: "exclamationmark.triangle.fill")
-                    .labelStyle(.titleAndIcon)
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(Color(hex: 0xE0A33A))
-                    .help("Resumes are usually one page")
+                Button { app.askAssistantToTrim() } label: {
+                    Label("\(app.pageCount) pages — trim", systemImage: "exclamationmark.triangle.fill")
+                        .labelStyle(.titleAndIcon)
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(Color(hex: 0xE0A33A))
+                }
+                .buttonStyle(.plain)
+                .help("Ask the assistant to fit this on one page")
             }
 
             Spacer()

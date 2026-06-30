@@ -139,15 +139,17 @@ private struct MessageRow: View {
     var body: some View {
         VStack(alignment: message.role == .user ? .trailing : .leading, spacing: 4) {
             if !message.tools.isEmpty {
-                ForEach(message.tools, id: \.self) { tool in
+                ForEach(message.tools) { tool in
+                    let d = tool.display
                     HStack(spacing: 5) {
-                        Image(systemName: "wrench.and.screwdriver").font(.caption2)
-                        Text(tool).font(.caption.monospaced())
+                        Image(systemName: d.icon).font(.system(size: 9))
+                        Text(d.text).font(.system(size: 10.5)).lineLimit(1)
                     }
-                    .foregroundStyle(Theme.peri)
-                    .padding(.horizontal, 7).padding(.vertical, 3)
-                    .background(Theme.bg2)
+                    .foregroundStyle(Theme.textSecondary)
+                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .background(Theme.elevated)
                     .clipShape(Capsule())
+                    .overlay(Capsule().stroke(Theme.border, lineWidth: 1))
                 }
             }
             if !message.text.isEmpty || message.streaming {

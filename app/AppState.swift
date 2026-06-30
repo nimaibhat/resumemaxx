@@ -292,6 +292,15 @@ final class AppState: ObservableObject {
         chat.send("The resume fails to compile with this LaTeX error:\n\n\(err)\n\nPlease fix it in the file.")
     }
 
+    func askAssistantToTrim() {
+        guard pageCount > 1, selected != nil else { return }
+        takeSnapshot(label: "before trim")
+        chat.send(
+            "The resume is currently \(pageCount) pages. Trim it to fit on ONE page without removing " +
+            "important content — tighten wording, bullets, and spacing — and verify with the resume_report tool."
+        )
+    }
+
     // MARK: snapshots
 
     func takeSnapshot(label: String = "") {

@@ -37,3 +37,4 @@ targets:
       base:
         PRODUCT_NAME: resumemaxx
         PRODUCT_BUNDLE_IDENTIFIER: com.resumemaxx.app
+        CODE_SIGN_ENTITLEMENTS: app/resumemaxx.entitlements

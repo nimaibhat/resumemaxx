@@ -70,10 +70,31 @@ SwiftUI app
 The Node sidecar drives the Claude Agent SDK, streams text and tool events back
 to the app, and keeps a separate conversation per resume.
 
+## Distribution
+
+The app bundles only the small sidecar source; the Node runtime installs into
+Application Support on first run, so the `.app` has no third-party binaries to
+sign. To produce a signed, notarized build:
+
+```sh
+# one-time: store notarytool credentials
+xcrun notarytool store-credentials resumemaxx-notary \
+  --apple-id you@example.com --team-id TEAMID --password APP_SPECIFIC_PW
+
+SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
+NOTARY_PROFILE="resumemaxx-notary" \
+  ./scripts/release.sh
+```
+
+This requires an Apple Developer account (Developer ID certificate). The script
+builds Release, signs with the hardened runtime + `app/resumemaxx.entitlements`,
+notarizes, and staples.
+
 ## Layout
 
 - `app/` SwiftUI sources (project generated from `project.yml` by XcodeGen)
 - `sidecar/` Node Agent SDK backend
+- `scripts/release.sh` signed + notarized build
 - `tui` branch: the original terminal version
 
 ## License

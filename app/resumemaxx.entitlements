@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Not sandboxed: resumemaxx spawns node/latexmk and reads the user's
+         resume folders, which the App Sandbox would block. Distributed via
+         Developer ID + notarization rather than the App Store. -->
+    <!-- Allow loading mixed-provenance binaries (the node runtime toolchain). -->
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+</dict>
+</plist>
