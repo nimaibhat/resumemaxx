@@ -1,0 +1,4 @@
+node_modules/
+.resumemaxx/
+.DS_Store
+*.log
