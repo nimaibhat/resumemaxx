@@ -4,14 +4,21 @@
 //   resumemaxx <dir>        open the browser in <dir>
 //   resumemaxx <file.tex>   jump straight into the split workspace
 //   resumemaxx clean [dir]  sweep stray LaTeX junk from a folder
+//   resumemaxx doctor       check that all dependencies are installed
+//   resumemaxx setup        install everything (macOS)
 //   resumemaxx --help
 
 import { statSync, existsSync } from "node:fs";
-import { resolve, extname } from "node:path";
+import { resolve, extname, dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { spawnSync } from "node:child_process";
 import { runBrowser } from "../lib/browser.mjs";
-import { launchWorkspace } from "../lib/workspace.mjs";
+import { launchWorkspace, killWorkspaces } from "../lib/workspace.mjs";
 import { startPreview, viewPdf } from "../lib/preview.mjs";
 import { cleanDir } from "../lib/compile.mjs";
+import { report, check } from "../lib/doctor.mjs";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const args = process.argv.slice(2);
 const cmd = args[0];
@@ -25,30 +32,39 @@ function help() {
     resumemaxx <dir>           browse a folder
     resumemaxx <file.tex>      open the split workspace for a resume
     resumemaxx clean [dir]     remove stray LaTeX aux files (.aux/.log/.fls/…)
+    resumemaxx doctor          check dependencies
+    resumemaxx setup           install everything (macOS)
     resumemaxx --help
 
   In the browser:
     ↑↓ / j k   move        ↵ open       ← parent folder
-    /          filter      c clean      q quit
+    /          filter      c clean      ^X quit
 
-  The workspace (tmux): Claude Code left, live PDF preview right.
-  Detach with Ctrl-b d.  Requires tmux + a graphics terminal (Ghostty/kitty).
+  In the workspace (tmux — Claude left, live preview right):
+    F2         back to the file browser      F4   quit resumemaxx
+    Ctrl-b ←→  switch panes (or click)
+
+  Requires tmux, chafa, and a graphics terminal (Ghostty/kitty).
 `);
 }
 
 async function browseLoop(dir) {
   // Loop: browse -> pick -> workspace/preview -> back to browse.
-  for (;;) {
-    const pick = await runBrowser(dir);
-    if (!pick) break;
-    if (pick.action === "open-tex") {
-      launchWorkspace(pick.path);
-      // return to browser in the same folder afterward
-      dir = resolve(pick.path, "..");
-    } else if (pick.action === "preview-pdf") {
-      await viewPdf(pick.path);
-      dir = resolve(pick.path, "..");
+  try {
+    for (;;) {
+      const pick = await runBrowser(dir);
+      if (!pick) break; // Ctrl-X / q
+      if (pick.action === "open-tex") {
+        const result = launchWorkspace(pick.path); // "quit" | "back"
+        dir = resolve(pick.path, "..");
+        if (result === "quit") break; // F4 in the workspace
+      } else if (pick.action === "preview-pdf") {
+        await viewPdf(pick.path);
+        dir = resolve(pick.path, "..");
+      }
     }
+  } finally {
+    killWorkspaces(); // tidy up any lingering tmux sessions on exit
   }
 }
 
@@ -62,6 +78,16 @@ async function main() {
     return startPreview(resolve(tex));
   }
 
+  if (cmd === "doctor") {
+    process.exit(report() ? 0 : 1);
+  }
+
+  if (cmd === "setup") {
+    const script = join(__dirname, "..", "scripts", "setup-macos.sh");
+    const r = spawnSync("bash", [script], { stdio: "inherit" });
+    process.exit(r.status ?? 1);
+  }
+
   if (cmd === "clean") {
     const dir = resolve(args[1] || ".");
     const removed = cleanDir(dir);
@@ -69,6 +95,13 @@ async function main() {
       ? `Removed ${removed.length} junk file(s):\n  ${removed.join("\n  ")}`
       : "No LaTeX junk found.");
     return;
+  }
+
+  // Everything past here is interactive and needs the toolchain.
+  const { missingRequired } = check();
+  if (missingRequired.length) {
+    report();
+    process.exit(1);
   }
 
   // No command, or a path argument.

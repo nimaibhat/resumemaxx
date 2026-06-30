@@ -37,6 +37,24 @@ Stop round-tripping through a slow editor extension. Open a resume, talk to Clau
 - [`pdftoppm`](https://poppler.freedesktop.org/) — `brew install poppler`
 - [Claude Code](https://claude.com/claude-code) on your `PATH` (`claude`)
 
+## Setup
+
+On macOS, one command installs everything (Homebrew, tmux, chafa, poppler,
+BasicTeX + the LaTeX packages resumes use, and PATH wiring):
+
+```bash
+resumemaxx setup
+```
+
+Check your toolchain any time:
+
+```bash
+resumemaxx doctor
+```
+
+On Linux, install the equivalents with your package manager:
+`tmux chafa poppler-utils texlive texlive-latex-extra latexmk`.
+
 ## Usage
 
 ```bash
@@ -62,7 +80,7 @@ resumemaxx clean ~/Documents/resumes
 | `←` / `h` | parent folder |
 | `/` | filter |
 | `c` | clean junk in this folder |
-| `q` | quit |
+| `Ctrl-X` / `q` | quit |
 
 Resumes show a marker: `●` already compiled, `○` not yet built.
 
@@ -70,10 +88,17 @@ Resumes show a marker: `●` already compiled, `○` not yet built.
 
 The left pane is Claude Code (running in the resume's folder). The right pane is
 the live preview — edit the `.tex` (yourself or by asking Claude), save, and the
-PDF re-renders automatically.
+PDF re-renders automatically. The current keys are always shown in the bottom bar.
 
-- Detach from the workspace with `Ctrl-b d`.
-- Switch panes with `Ctrl-b ←/→` (mouse is enabled too).
+| Key | Action |
+| --- | --- |
+| `F2` | back to the file browser (keeps this workspace open) |
+| `F4` | quit resumemaxx |
+| `Ctrl-b ←/→` | switch panes (or click — mouse is enabled) |
+
+Going back with `F2` leaves the workspace running, so reopening the same resume
+**reattaches** — your Claude conversation is right where you left it. The tmux
+server runs on a private socket, so none of this touches your normal tmux.
 
 ## How it works
 
