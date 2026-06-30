@@ -4,11 +4,13 @@ struct Sidebar: View {
     @ObservedObject var app: AppState
     @State private var expanded: Set<URL> = []
     @State private var didInit = false
+    @State private var search = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
             folderBar
+            searchBar
             Divider().overlay(Theme.border)
             tree
         }
@@ -30,6 +32,22 @@ struct Sidebar: View {
             Wordmark(size: 13)
             Spacer()
             Menu {
+                Picker("Sort by", selection: $app.sortMode) {
+                    ForEach(SortMode.allCases) { Text($0.label).tag($0) }
+                }
+            } label: {
+                Image(systemName: "arrow.up.arrow.down")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Theme.textSecondary)
+                    .frame(width: 20, height: 20)
+                    .contentShape(Rectangle())
+            }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .help("Sort resumes")
+
+            Menu {
                 Button("New Resume") { app.newResume(in: nil) }
                 Button("New Folder") { app.newFolder(in: nil) }
             } label: {
@@ -45,8 +63,29 @@ struct Sidebar: View {
             .help("New resume or folder")
         }
         .padding(.leading, 10)
-        .padding(.trailing, 8)
+        .padding(.trailing, 6)
         .frame(height: 34)
+    }
+
+    private var searchBar: some View {
+        HStack(spacing: 5) {
+            Image(systemName: "magnifyingglass").font(.system(size: 10)).foregroundStyle(Theme.textMuted)
+            TextField("Search resumes", text: $search)
+                .textFieldStyle(.plain)
+                .font(.system(size: 11.5))
+                .foregroundStyle(Theme.text)
+            if !search.isEmpty {
+                Button { search = "" } label: {
+                    Image(systemName: "xmark.circle.fill").font(.system(size: 10)).foregroundStyle(Theme.textMuted)
+                }.buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 8)
+        .frame(height: 26)
+        .background(Theme.elevated)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
+        .padding(.horizontal, 8)
+        .padding(.bottom, 6)
     }
 
     private var folderBar: some View {
@@ -93,6 +132,19 @@ struct Sidebar: View {
     private struct Row: Identifiable { let node: FileNode; let depth: Int; var id: URL { node.url } }
 
     private func rows() -> [Row] {
+        let query = search.trimmingCharacters(in: .whitespaces).lowercased()
+        if !query.isEmpty {
+            // Flat list of every matching resume across the tree.
+            var out: [Row] = []
+            func collect(_ nodes: [FileNode]) {
+                for n in nodes {
+                    if !n.isDir, n.name.lowercased().contains(query) { out.append(Row(node: n, depth: 0)) }
+                    if let kids = n.children { collect(kids) }
+                }
+            }
+            collect(app.tree)
+            return out
+        }
         var out: [Row] = []
         func walk(_ nodes: [FileNode], _ depth: Int) {
             for n in nodes {
