@@ -114,11 +114,11 @@ private struct MessageRow: View {
             if !message.text.isEmpty || message.streaming {
                 Text(message.text.isEmpty && message.streaming ? "..." : message.text)
                     .textSelection(.enabled)
-                    .font(.callout)
-                    .foregroundStyle(message.role == .user ? Theme.ink : .white)
+                    .font(.system(size: 13))
+                    .foregroundStyle(message.role == .user ? .white : Theme.text)
                     .padding(.horizontal, 11).padding(.vertical, 8)
-                    .background(message.role == .user ? AnyShapeStyle(Theme.lilac) : AnyShapeStyle(Theme.bg2))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .background(message.role == .user ? AnyShapeStyle(Theme.accent) : AnyShapeStyle(Theme.elevated))
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.radiusLg))
             }
         }
         .frame(maxWidth: .infinity, alignment: message.role == .user ? .trailing : .leading)

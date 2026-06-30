@@ -3,12 +3,13 @@ import SwiftUI
 @MainActor
 final class AppState: ObservableObject {
     @Published var folder: URL
-    @Published var resumes: [Resume] = []
+    @Published var tree: [FileNode] = []
     @Published var selected: Resume?
     @Published var pdfURL: URL?
     @Published var reloadToken = 0
     @Published var status = ""
     @Published var compiling = false
+    @Published var showingCode = false
 
     let chat = ChatViewModel()
 
@@ -28,7 +29,47 @@ final class AppState: ObservableObject {
     }
 
     func rescan() {
-        resumes = Library.scan(folder)
+        tree = FileTree.build(folder)
+    }
+
+    func select(url: URL) {
+        select(Resume(url: url))
+    }
+
+    // MARK: file operations
+
+    func newResume(in dir: URL?) {
+        let target = dir ?? folder
+        guard let name = FileOps.promptName("New resume name", defaultValue: "untitled") else { return }
+        let created = FileOps.newResume(in: target, name: name)
+        rescan()
+        if let created { select(url: created) }
+    }
+
+    func newFolder(in dir: URL?) {
+        let target = dir ?? folder
+        guard let name = FileOps.promptName("New folder name", defaultValue: "Folder") else { return }
+        FileOps.newFolder(in: target, name: name)
+        rescan()
+    }
+
+    func rename(_ url: URL) {
+        let current = url.deletingPathExtension().lastPathComponent
+        guard let name = FileOps.promptName("Rename", defaultValue: current, confirm: "Rename") else { return }
+        FileOps.rename(url, to: name)
+        if selected?.url == url { selected = nil; pdfURL = nil; watcher?.stop() }
+        rescan()
+    }
+
+    func duplicate(_ url: URL) {
+        FileOps.duplicate(url)
+        rescan()
+    }
+
+    func delete(_ url: URL) {
+        FileOps.delete(url)
+        if selected?.url == url { selected = nil; pdfURL = nil; watcher?.stop() }
+        rescan()
     }
 
     func select(_ resume: Resume) {
