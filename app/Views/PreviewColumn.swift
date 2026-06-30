@@ -34,9 +34,11 @@ struct PreviewColumn: View {
             Spacer()
 
             if !app.showingCode && app.pdfURL != nil {
-                iconButton("minus.magnifyingglass", "Zoom out") { pdf.zoomOut() }
-                iconButton("arrow.up.left.and.arrow.down.right.magnifyingglass", "Fit") { pdf.fit() }
-                iconButton("plus.magnifyingglass", "Zoom in") { pdf.zoomIn() }
+                HStack(spacing: 1) {
+                    iconButton("minus.magnifyingglass", "Zoom out") { pdf.zoomOut() }
+                    iconButton("arrow.up.left.and.arrow.down.right.magnifyingglass", "Fit") { pdf.fit() }
+                    iconButton("plus.magnifyingglass", "Zoom in") { pdf.zoomIn() }
+                }
                 Divider().frame(height: 14).overlay(Theme.border)
             }
             // Code view toggle (small icon, top-right).
@@ -117,7 +119,7 @@ struct PreviewColumn: View {
             Image(systemName: system)
                 .font(.system(size: 12))
                 .foregroundStyle(active ? Theme.accent : Theme.textSecondary)
-                .frame(width: 22, height: 20)
+                .frame(width: 19, height: 20)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

@@ -32,15 +32,20 @@ struct Sidebar: View {
             Wordmark(size: 13)
             Spacer()
             Button(action: organize) {
-                Image(systemName: "wand.and.stars")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(app.chat.ready ? Theme.textSecondary : Theme.textMuted)
-                    .frame(width: 20, height: 20)
-                    .contentShape(Rectangle())
+                HStack(spacing: 4) {
+                    Image(systemName: "wand.and.stars").font(.system(size: 10, weight: .medium))
+                    Text("Organize").font(.system(size: 11, weight: .medium))
+                }
+                .foregroundStyle(app.chat.ready ? Theme.accent : Theme.textMuted)
+                .padding(.horizontal, 7)
+                .frame(height: 22)
+                .background(app.chat.ready ? Theme.accent.opacity(0.12) : Color.clear)
+                .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .disabled(!app.chat.ready)
-            .help("Organize resumes with the assistant")
+            .help("Let the assistant sort your resumes into folders by target")
 
             Menu {
                 Picker("Sort by", selection: $app.sortMode) {
@@ -50,7 +55,7 @@ struct Sidebar: View {
                 Image(systemName: "arrow.up.arrow.down")
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(Theme.textSecondary)
-                    .frame(width: 20, height: 20)
+                    .frame(width: 18, height: 20)
                     .contentShape(Rectangle())
             }
             .menuStyle(.borderlessButton)
@@ -63,9 +68,9 @@ struct Sidebar: View {
                 Button("New Folder") { app.newFolder(in: nil) }
             } label: {
                 Image(systemName: "plus")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(Theme.textSecondary)
-                    .frame(width: 20, height: 20)
+                    .frame(width: 18, height: 20)
                     .contentShape(Rectangle())
             }
             .menuStyle(.borderlessButton)

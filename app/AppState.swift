@@ -57,8 +57,31 @@ final class AppState: ObservableObject {
             "resumes into subfolders by their target (company, role, scholarship, hackathon, or " +
             "a general base), using clear human-readable folder names. Use mkdir and mv to create " +
             "folders and move the .tex files. Do not change the contents of any resume, and do not " +
-            "touch hidden folders or build artifacts. When finished, give a short summary of the new layout."
+            "touch hidden folders or build artifacts.\n\n" +
+            "Here are the resumes with their dates (use created/modified dates as a signal, e.g. " +
+            "recency or grouping by season):\n\n" + libraryManifest() + "\n\n" +
+            "When finished, give a short summary of the new layout."
         )
+    }
+
+    // A listing of every resume with its created/modified dates, for the agent.
+    private func libraryManifest() -> String {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM-dd"
+        var lines: [String] = []
+        func walk(_ nodes: [FileNode], _ prefix: String) {
+            for n in nodes {
+                if n.isDir { walk(n.children ?? [], prefix + n.name + "/") }
+                else {
+                    let v = try? n.url.resourceValues(forKeys: [.creationDateKey, .contentModificationDateKey])
+                    let made = v?.creationDate.map(fmt.string(from:)) ?? "?"
+                    let mod = v?.contentModificationDate.map(fmt.string(from:)) ?? "?"
+                    lines.append("- \(prefix)\(n.url.lastPathComponent): created \(made), modified \(mod)")
+                }
+            }
+        }
+        walk(tree, "")
+        return lines.joined(separator: "\n")
     }
 
     func setFolder(_ url: URL) {
