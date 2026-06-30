@@ -43,6 +43,27 @@ final class AppState: ObservableObject {
         didSet { UserDefaults.standard.set(openaiModel, forKey: "openaiModel") }
     }
 
+    // Assistant runtime (Node sidecar dependencies) install state.
+    @Published var runtimeReady = Runtime.isInstalled
+    @Published var runtimeInstalling = false
+    @Published var runtimeLog = ""
+
+    func installRuntime() {
+        guard !runtimeInstalling else { return }
+        runtimeInstalling = true
+        runtimeLog = "Installing assistant runtime..."
+        Runtime.install(
+            onLine: { [weak self] line in self?.runtimeLog = line },
+            completion: { [weak self] ok in
+                guard let self else { return }
+                self.runtimeInstalling = false
+                self.runtimeReady = ok
+                self.runtimeLog = ok ? "Assistant runtime installed." : "Runtime install failed. Check that Node is installed."
+                if ok { self.chat.restart() }
+            }
+        )
+    }
+
     func providerConfig() -> ProviderConfig {
         ProviderConfig(provider: provider, openaiKey: openaiKey, openaiModel: openaiModel.isEmpty ? "gpt-4o" : openaiModel)
     }
@@ -72,6 +93,7 @@ final class AppState: ObservableObject {
         rescan()
         chat.provider = providerConfig()
         chat.onTurnComplete = { [weak self] in self?.rescan() } // agent may have changed files
+        if !runtimeReady { installRuntime() } // first run: set up the bundled sidecar
     }
 
     func organizeLibrary() {

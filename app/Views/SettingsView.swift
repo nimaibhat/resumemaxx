@@ -37,6 +37,31 @@ struct SettingsView: View {
 
             Divider().overlay(Theme.border)
 
+            VStack(alignment: .leading, spacing: 6) {
+                Text("ASSISTANT RUNTIME")
+                    .font(.system(size: 10, weight: .semibold)).kerning(0.5)
+                    .foregroundStyle(Theme.textMuted)
+                HStack(spacing: 8) {
+                    if app.runtimeInstalling {
+                        ProgressView().controlSize(.small).scaleEffect(0.7)
+                        Text(app.runtimeLog).font(.system(size: 11)).foregroundStyle(Theme.textMuted).lineLimit(1)
+                    } else {
+                        Image(systemName: app.runtimeReady ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+                            .font(.system(size: 12))
+                            .foregroundStyle(app.runtimeReady ? Color(hex: 0x4FB06A) : Color(hex: 0xE0A33A))
+                        Text(app.runtimeReady ? "Installed" : "Not installed")
+                            .font(.system(size: 12)).foregroundStyle(Theme.text)
+                    }
+                    Spacer()
+                    if !app.runtimeInstalling {
+                        Button(app.runtimeReady ? "Reinstall" : "Install") { app.installRuntime() }
+                            .buttonStyle(.plain).font(.system(size: 11, weight: .medium)).foregroundStyle(Theme.accent)
+                    }
+                }
+            }
+
+            Divider().overlay(Theme.border)
+
             VStack(alignment: .leading, spacing: 7) {
                 Text("TOOLS")
                     .font(.system(size: 10, weight: .semibold)).kerning(0.5)

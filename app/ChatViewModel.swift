@@ -48,6 +48,9 @@ final class ChatViewModel: ObservableObject {
         sidecar.sendStop()
     }
 
+    // Start the sidecar (e.g. after the runtime finishes installing).
+    func restart() { sidecar.start() }
+
     private func handle(_ obj: [String: Any]) {
         switch obj["type"] as? String {
         case "turn_start":

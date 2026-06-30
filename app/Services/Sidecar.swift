@@ -11,8 +11,7 @@ final class Sidecar {
 
     func start() {
         guard proc == nil, let node = Tools.find("node") else { return }
-        let script = Sidecar.scriptPath()
-        guard FileManager.default.fileExists(atPath: script) else { return }
+        guard let script = Runtime.scriptPath(), FileManager.default.fileExists(atPath: script) else { return }
 
         let p = Process()
         p.executableURL = URL(fileURLWithPath: node)
@@ -77,13 +76,5 @@ final class Sidecar {
     func stop() {
         proc?.terminate()
         proc = nil
-    }
-
-    // Dev: the repo sidecar. Override with RESUMEMAXX_SIDECAR; bundled later.
-    static func scriptPath() -> String {
-        if let env = ProcessInfo.processInfo.environment["RESUMEMAXX_SIDECAR"] { return env }
-        if let res = Bundle.main.url(forResource: "sidecar", withExtension: "mjs") { return res.path }
-        return FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Documents/resumemaxx/sidecar/sidecar.mjs").path
     }
 }
