@@ -1,0 +1,33 @@
+name: resumemaxx
+options:
+  bundleIdPrefix: com.resumemaxx
+  createIntermediateGroups: true
+  deploymentTarget:
+    macOS: "14.0"
+settings:
+  base:
+    SWIFT_VERSION: "5"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGNING_ALLOWED: "NO"
+    CODE_SIGN_IDENTITY: ""
+    ENABLE_HARDENED_RUNTIME: "NO"
+targets:
+  resumemaxx:
+    type: application
+    platform: macOS
+    sources:
+      - app
+    info:
+      path: app/Info.plist
+      properties:
+        CFBundleDisplayName: resumemaxx
+        CFBundleName: resumemaxx
+        LSMinimumSystemVersion: "14.0"
+        NSHighResolutionCapable: true
+        NSMainNibFile: ""
+        NSPrincipalClass: NSApplication
+    settings:
+      base:
+        PRODUCT_NAME: resumemaxx
+        PRODUCT_BUNDLE_IDENTIFIER: com.resumemaxx.app
