@@ -7,22 +7,46 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		008E66055DF48DC74E23BD68 /* LatexCompiler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16139BEFD2CF8DA2564503B6 /* LatexCompiler.swift */; };
+		1E4646115090F300723487EE /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C2D6DB88611360C3540164B /* AppState.swift */; };
+		298046D78F0F55DBDF257C62 /* FileWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC74E2E8CD85EE4E742CE1C /* FileWatcher.swift */; };
+		419D485AB64C8E42AA954D93 /* ChatPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8CF0F8DE790E4D55F62576 /* ChatPanel.swift */; };
 		6E462052959ED9C4F3E10D1A /* ResumemaxxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66416CC1C3F5B5B63452CE77 /* ResumemaxxApp.swift */; };
+		75B787AEB0A8576F9FFE9921 /* Resume.swift in Sources */ = {isa = PBXBuildFile; fileRef = 732808655C93814EBC11A015 /* Resume.swift */; };
 		776BE0F95CBE906861645C4B /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3C9F2345B82B1EC8ECAFCA4 /* ContentView.swift */; };
+		86FB9D58EB415C87FFBEE012 /* Sidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EC4ACB73130C12288DC102 /* Sidebar.swift */; };
+		8DFCC75E8A40EDEE074FEBCD /* PreviewColumn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72B69B6E44854FFE6BB67814 /* PreviewColumn.swift */; };
+		A00576ACFB6696800C56CC1B /* Tools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08F11024D839BD6C46F3D1C8 /* Tools.swift */; };
 		BDF7A7B9F0DCDA1C25B9FD53 /* PDFPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CBE5EFB0BFB1EBE1C2CD8C9 /* PDFPreview.swift */; };
 		F8E2DE71EA2240A04DC0FBBC /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 131E5A9F2950522ED2AC3251 /* Theme.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		08F11024D839BD6C46F3D1C8 /* Tools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tools.swift; sourceTree = "<group>"; };
 		0CBE5EFB0BFB1EBE1C2CD8C9 /* PDFPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFPreview.swift; sourceTree = "<group>"; };
+		0D8CF0F8DE790E4D55F62576 /* ChatPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatPanel.swift; sourceTree = "<group>"; };
 		131E5A9F2950522ED2AC3251 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		16139BEFD2CF8DA2564503B6 /* LatexCompiler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LatexCompiler.swift; sourceTree = "<group>"; };
 		4110D647E98A907F7D4D88B2 /* resumemaxx.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = resumemaxx.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4CC74E2E8CD85EE4E742CE1C /* FileWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileWatcher.swift; sourceTree = "<group>"; };
+		5C2D6DB88611360C3540164B /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		66416CC1C3F5B5B63452CE77 /* ResumemaxxApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumemaxxApp.swift; sourceTree = "<group>"; };
+		72B69B6E44854FFE6BB67814 /* PreviewColumn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewColumn.swift; sourceTree = "<group>"; };
+		732808655C93814EBC11A015 /* Resume.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Resume.swift; sourceTree = "<group>"; };
+		B2EC4ACB73130C12288DC102 /* Sidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar.swift; sourceTree = "<group>"; };
 		C2B3C11229701F38287BA32F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		D3C9F2345B82B1EC8ECAFCA4 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		10FFD9A02A08740F1066CA3B /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				732808655C93814EBC11A015 /* Resume.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
 		181AAA2D65CF6B25CDF95EFF = {
 			isa = PBXGroup;
 			children = (
@@ -42,7 +66,10 @@
 		7616F918D76BAF69D11CB9A8 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				0D8CF0F8DE790E4D55F62576 /* ChatPanel.swift */,
 				0CBE5EFB0BFB1EBE1C2CD8C9 /* PDFPreview.swift */,
+				72B69B6E44854FFE6BB67814 /* PreviewColumn.swift */,
+				B2EC4ACB73130C12288DC102 /* Sidebar.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -50,13 +77,26 @@
 		7E4FEF79C1794AA18596950F /* app */ = {
 			isa = PBXGroup;
 			children = (
+				5C2D6DB88611360C3540164B /* AppState.swift */,
 				D3C9F2345B82B1EC8ECAFCA4 /* ContentView.swift */,
 				C2B3C11229701F38287BA32F /* Info.plist */,
 				66416CC1C3F5B5B63452CE77 /* ResumemaxxApp.swift */,
 				131E5A9F2950522ED2AC3251 /* Theme.swift */,
+				10FFD9A02A08740F1066CA3B /* Models */,
+				B3B87602B2994714EF1F8E64 /* Services */,
 				7616F918D76BAF69D11CB9A8 /* Views */,
 			);
 			path = app;
+			sourceTree = "<group>";
+		};
+		B3B87602B2994714EF1F8E64 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				4CC74E2E8CD85EE4E742CE1C /* FileWatcher.swift */,
+				16139BEFD2CF8DA2564503B6 /* LatexCompiler.swift */,
+				08F11024D839BD6C46F3D1C8 /* Tools.swift */,
+			);
+			path = Services;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -114,10 +154,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1E4646115090F300723487EE /* AppState.swift in Sources */,
+				419D485AB64C8E42AA954D93 /* ChatPanel.swift in Sources */,
 				776BE0F95CBE906861645C4B /* ContentView.swift in Sources */,
+				298046D78F0F55DBDF257C62 /* FileWatcher.swift in Sources */,
+				008E66055DF48DC74E23BD68 /* LatexCompiler.swift in Sources */,
 				BDF7A7B9F0DCDA1C25B9FD53 /* PDFPreview.swift in Sources */,
+				8DFCC75E8A40EDEE074FEBCD /* PreviewColumn.swift in Sources */,
+				75B787AEB0A8576F9FFE9921 /* Resume.swift in Sources */,
 				6E462052959ED9C4F3E10D1A /* ResumemaxxApp.swift in Sources */,
+				86FB9D58EB415C87FFBEE012 /* Sidebar.swift in Sources */,
 				F8E2DE71EA2240A04DC0FBBC /* Theme.swift in Sources */,
+				A00576ACFB6696800C56CC1B /* Tools.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
