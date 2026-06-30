@@ -10,6 +10,8 @@ final class AppState: ObservableObject {
     @Published var status = ""
     @Published var compiling = false
 
+    let chat = ChatViewModel()
+
     private var watcher: FileWatcher?
     private var debounce: DispatchWorkItem?
 
@@ -34,6 +36,7 @@ final class AppState: ObservableObject {
         watcher?.stop()
         status = "compiling"
         recompile(initial: true)
+        chat.configure(resume)
         watcher = FileWatcher(url: resume.url) { [weak self] in
             self?.scheduleRecompile()
         }

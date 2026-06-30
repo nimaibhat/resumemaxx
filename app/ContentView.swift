@@ -9,7 +9,7 @@ struct ContentView: View {
                 .navigationSplitViewColumnWidth(min: 220, ideal: 260, max: 320)
         } detail: {
             HSplitView {
-                ChatPanel(app: app)
+                ChatPanel(app: app, chat: app.chat)
                     .frame(minWidth: 320, idealWidth: 420)
                 PreviewColumn(app: app)
                     .frame(minWidth: 440)
