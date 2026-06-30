@@ -2,84 +2,123 @@ import SwiftUI
 
 struct Sidebar: View {
     @ObservedObject var app: AppState
-    @State private var selectedURL: URL?
+    @State private var expanded: Set<URL> = []
+    @State private var didInit = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
-            Divider().overlay(Theme.border)
             folderBar
-            Divider().overlay(Theme.borderSubtle)
-            list
+            Divider().overlay(Theme.border)
+            tree
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(Theme.panel)
-        .onChange(of: selectedURL) { url in
-            if let url, url.pathExtension.lowercased() == "tex" { app.select(url: url) }
+        .overlay(alignment: .trailing) {
+            Rectangle().fill(Theme.border).frame(width: 1)
         }
+        .onAppear {
+            if !didInit { expanded = allFolders(app.tree); didInit = true }
+        }
+        .onChange(of: app.folder) { _ in expanded = allFolders(app.tree) }
     }
 
+    // MARK: header
+
     private var header: some View {
-        HStack {
-            Wordmark(size: 14)
+        HStack(spacing: 6) {
+            Wordmark(size: 13)
             Spacer()
             Menu {
                 Button("New Resume") { app.newResume(in: nil) }
                 Button("New Folder") { app.newFolder(in: nil) }
             } label: {
                 Image(systemName: "plus")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(Theme.textSecondary)
+                    .frame(width: 20, height: 20)
+                    .contentShape(Rectangle())
             }
             .menuStyle(.borderlessButton)
             .menuIndicator(.hidden)
-            .frame(width: 22)
+            .fixedSize()
             .help("New resume or folder")
         }
-        .padding(.horizontal, Space.md)
-        .padding(.vertical, Space.sm + 2)
+        .padding(.leading, 10)
+        .padding(.trailing, 8)
+        .frame(height: 34)
     }
 
     private var folderBar: some View {
         Button(action: pickFolder) {
-            HStack(spacing: 6) {
-                Image(systemName: "folder").font(.system(size: 10))
-                Text(app.folder.lastPathComponent).font(.system(size: 11)).lineLimit(1)
+            HStack(spacing: 5) {
+                Image(systemName: "folder").font(.system(size: 9))
+                Text(app.folder.lastPathComponent.uppercased())
+                    .font(.system(size: 10, weight: .semibold))
+                    .kerning(0.4)
+                    .lineLimit(1)
                 Spacer()
-                Image(systemName: "chevron.up.chevron.down").font(.system(size: 8))
+                Image(systemName: "chevron.up.chevron.down").font(.system(size: 7))
             }
-            .foregroundStyle(Theme.textSecondary)
-            .padding(.horizontal, Space.md)
-            .padding(.vertical, 6)
+            .foregroundStyle(Theme.textMuted)
+            .padding(.horizontal, 10)
+            .frame(height: 24)
         }
         .buttonStyle(.plain)
         .help("Change library folder")
     }
 
-    private var list: some View {
-        List(selection: $selectedURL) {
-            OutlineGroup(app.tree, children: \.children) { node in
-                row(node).tag(node.url)
+    // MARK: tree
+
+    private var tree: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 0) {
+                ForEach(rows()) { row in
+                    FileRow(
+                        node: row.node,
+                        depth: row.depth,
+                        isExpanded: expanded.contains(row.node.url),
+                        isSelected: app.selected?.url == row.node.url,
+                        onTap: { tap(row.node) }
+                    )
+                    .contextMenu { menu(row.node) }
+                }
             }
+            .padding(.vertical, 4)
         }
-        .listStyle(.sidebar)
         .scrollContentBackground(.hidden)
         .background(Theme.panel)
-        .environment(\.defaultMinListRowHeight, 26)
     }
 
-    private func row(_ node: FileNode) -> some View {
-        HStack(spacing: 7) {
-            Image(systemName: node.isDir ? "folder" : "doc.text")
-                .font(.system(size: 11))
-                .foregroundStyle(node.isDir ? Theme.textSecondary
-                                 : (node.isBuilt ? Theme.accent : Theme.textMuted))
-            Text(node.name)
-                .font(.system(size: 12.5))
-                .foregroundStyle(Theme.text)
-                .lineLimit(1)
-            Spacer(minLength: 0)
+    private struct Row: Identifiable { let node: FileNode; let depth: Int; var id: URL { node.url } }
+
+    private func rows() -> [Row] {
+        var out: [Row] = []
+        func walk(_ nodes: [FileNode], _ depth: Int) {
+            for n in nodes {
+                out.append(Row(node: n, depth: depth))
+                if n.isDir, expanded.contains(n.url), let kids = n.children { walk(kids, depth + 1) }
+            }
         }
-        .contextMenu { menu(node) }
+        walk(app.tree, 0)
+        return out
+    }
+
+    private func allFolders(_ nodes: [FileNode]) -> Set<URL> {
+        var set: Set<URL> = []
+        func walk(_ ns: [FileNode]) {
+            for n in ns where n.isDir { set.insert(n.url); if let k = n.children { walk(k) } }
+        }
+        walk(nodes)
+        return set
+    }
+
+    private func tap(_ node: FileNode) {
+        if node.isDir {
+            if expanded.contains(node.url) { expanded.remove(node.url) } else { expanded.insert(node.url) }
+        } else {
+            app.select(url: node.url)
+        }
     }
 
     @ViewBuilder
@@ -90,9 +129,7 @@ struct Sidebar: View {
             Divider()
         }
         Button("Rename") { app.rename(node.url) }
-        if !node.isDir {
-            Button("Duplicate") { app.duplicate(node.url) }
-        }
+        if !node.isDir { Button("Duplicate") { app.duplicate(node.url) } }
         Button("Reveal in Finder") { FileOps.reveal(node.url) }
         Divider()
         Button("Delete", role: .destructive) { app.delete(node.url) }
@@ -104,8 +141,53 @@ struct Sidebar: View {
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
         panel.directoryURL = app.folder
-        if panel.runModal() == .OK, let url = panel.url {
-            app.setFolder(url)
+        if panel.runModal() == .OK, let url = panel.url { app.setFolder(url) }
+    }
+}
+
+// A single dense, full-width row in the file tree.
+private struct FileRow: View {
+    let node: FileNode
+    let depth: Int
+    let isExpanded: Bool
+    let isSelected: Bool
+    let onTap: () -> Void
+    @State private var hover = false
+
+    var body: some View {
+        HStack(spacing: 5) {
+            if node.isDir {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(Theme.textMuted)
+                    .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                    .frame(width: 10)
+            } else {
+                Color.clear.frame(width: 10)
+            }
+            Image(systemName: node.isDir ? "folder.fill" : "doc.text")
+                .font(.system(size: 11))
+                .foregroundStyle(iconColor)
+                .frame(width: 14)
+            Text(node.name)
+                .font(.system(size: 12.5, weight: isSelected ? .medium : .regular))
+                .foregroundStyle(isSelected ? .white : Theme.textSecondary)
+                .lineLimit(1)
+            Spacer(minLength: 0)
         }
+        .padding(.leading, CGFloat(8 + depth * 12))
+        .padding(.trailing, 8)
+        .padding(.vertical, 2.5)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(isSelected ? Theme.selection : (hover ? Theme.hover : Color.clear))
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onTap)
+        .onHover { hover = $0 }
+    }
+
+    private var iconColor: Color {
+        if node.isDir { return Theme.textMuted }
+        if isSelected { return .white }
+        return node.isBuilt ? Theme.accent : Theme.textMuted
     }
 }

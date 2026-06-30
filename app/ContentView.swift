@@ -4,18 +4,20 @@ struct ContentView: View {
     @StateObject private var app = AppState()
 
     var body: some View {
-        NavigationSplitView {
+        HSplitView {
             Sidebar(app: app)
-                .navigationSplitViewColumnWidth(min: 220, ideal: 260, max: 320)
-        } detail: {
-            HSplitView {
-                ChatPanel(app: app, chat: app.chat)
-                    .frame(minWidth: 320, idealWidth: 420)
-                PreviewColumn(app: app)
-                    .frame(minWidth: 440)
-            }
+                .frame(minWidth: 200, idealWidth: 240, maxWidth: 360)
+
+            ChatPanel(app: app, chat: app.chat)
+                .frame(minWidth: 300, idealWidth: 420)
+                .overlay(alignment: .trailing) {
+                    Rectangle().fill(Theme.border).frame(width: 1)
+                }
+
+            PreviewColumn(app: app)
+                .frame(minWidth: 440)
         }
-        .navigationTitle("resumemaxx")
+        .background(Theme.bg)
         .preferredColorScheme(.dark)
     }
 }

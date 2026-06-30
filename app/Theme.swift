@@ -13,14 +13,15 @@ extension Color {
 // Cursor-inspired design system: very dark neutral surfaces, low-contrast
 // borders, a calm blue accent, tight radii, restrained type.
 enum Theme {
-    // Surfaces
-    static let bg = Color(hex: 0x141414)          // app base
-    static let panel = Color(hex: 0x1B1B1B)        // sidebar, headers
-    static let elevated = Color(hex: 0x212121)     // inputs, bubbles, cards
-    static let hover = Color(hex: 0x282828)
+    // Surfaces (flat zinc/slate, VS Code / Cursor family)
+    static let bg = Color(hex: 0x181818)          // editor / main content
+    static let panel = Color(hex: 0x181818)        // sidebar (flush, same flat tone)
+    static let elevated = Color(hex: 0x202020)     // inputs, bubbles, cards
+    static let hover = Color(hex: 0x202020)        // row hover
+    static let selection = Color(hex: 0x2A2A2A)    // active file row (zinc-800/850)
     // Borders
-    static let border = Color(hex: 0x2E2E2E)
-    static let borderSubtle = Color(hex: 0x242424)
+    static let border = Color(hex: 0x2A2A2A)       // zinc-800 1px separators
+    static let borderSubtle = Color(hex: 0x222222)
     // Text
     static let text = Color(hex: 0xE6E6E6)
     static let textSecondary = Color(hex: 0x9A9A9A)

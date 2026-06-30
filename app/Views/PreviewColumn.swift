@@ -41,7 +41,7 @@ struct PreviewColumn: View {
             .disabled(app.selected == nil)
         }
         .padding(.horizontal, Space.md)
-        .padding(.vertical, 6)
+        .frame(height: 34)
         .background(Theme.panel)
     }
 

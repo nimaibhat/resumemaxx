@@ -16,20 +16,23 @@ struct ChatPanel: View {
     }
 
     private var header: some View {
-        HStack(spacing: 8) {
-            Circle().fill(Theme.accentBar).frame(width: 8, height: 8)
-            Text("resumemaxx assistant")
-                .font(.system(.headline, design: .rounded))
-                .foregroundStyle(Theme.lilac)
+        HStack(spacing: 7) {
+            Image(systemName: "sparkle")
+                .font(.system(size: 11))
+                .foregroundStyle(Theme.accent)
+            Text("Assistant")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(Theme.text)
             Spacer()
             if let r = app.selected {
-                Text(r.name).font(.caption).foregroundStyle(Theme.peri)
+                Text(r.name).font(.system(size: 11)).foregroundStyle(Theme.textMuted)
             } else if !chat.ready {
-                Text("starting...").font(.caption).foregroundStyle(Theme.dimText)
+                Text("starting...").font(.system(size: 11)).foregroundStyle(Theme.textMuted)
             }
         }
-        .padding(.horizontal, 12).padding(.vertical, 9)
-        .background(Theme.bg2)
+        .padding(.horizontal, 12)
+        .frame(height: 34)
+        .background(Theme.panel)
     }
 
     private var messages: some View {
