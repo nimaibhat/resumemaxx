@@ -270,9 +270,29 @@ final class AppState: ObservableObject {
         chat.send("The resume fails to compile with this LaTeX error:\n\n\(err)\n\nPlease fix it in the file.")
     }
 
+    // MARK: snapshots
+
+    func takeSnapshot(label: String = "") {
+        guard let tex = selected?.url else { return }
+        Snapshots.take(tex, label: label)
+    }
+
+    func snapshotList() -> [Snapshot] {
+        guard let tex = selected?.url else { return [] }
+        return Snapshots.list(for: tex)
+    }
+
+    func restoreSnapshot(_ snap: Snapshot) {
+        guard let tex = selected?.url else { return }
+        Snapshots.take(tex, label: "before restore") // make the restore undoable
+        Snapshots.restore(snap, to: tex)
+        // the file watcher will recompile and the preview will refresh
+    }
+
     func tailorToJob(_ jd: String) {
         let text = jd.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, selected != nil else { return }
+        takeSnapshot(label: "before tailor")
         chat.send(
             "Tailor my resume to the job description below. Reorder and rewrite bullet points to " +
             "emphasize the most relevant experience and match the role's important keywords and " +

@@ -91,13 +91,23 @@ struct ChatPanel: View {
                 .foregroundStyle(.white)
                 .disabled(app.selected == nil || !chat.ready)
                 .onSubmit(submit)
-            Button(action: submit) {
-                Image(systemName: "arrow.up.circle.fill")
-                    .font(.title2)
-                    .foregroundStyle(canSend ? Theme.purple : Theme.dimText)
+            if chat.thinking {
+                Button { chat.stop() } label: {
+                    Image(systemName: "stop.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(Theme.danger)
+                }
+                .buttonStyle(.plain)
+                .help("Stop")
+            } else {
+                Button(action: submit) {
+                    Image(systemName: "arrow.up.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(canSend ? Theme.accent : Theme.textMuted)
+                }
+                .buttonStyle(.plain)
+                .disabled(!canSend)
             }
-            .buttonStyle(.plain)
-            .disabled(!canSend)
         }
         .padding(10)
         .background(Theme.bg)
@@ -118,6 +128,14 @@ struct ChatPanel: View {
 private struct MessageRow: View {
     let message: ChatMessage
 
+    // Render inline markdown (bold, italic, code, links) while keeping newlines.
+    static func markdown(_ s: String) -> AttributedString {
+        (try? AttributedString(
+            markdown: s,
+            options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+        )) ?? AttributedString(s)
+    }
+
     var body: some View {
         VStack(alignment: message.role == .user ? .trailing : .leading, spacing: 4) {
             if !message.tools.isEmpty {
@@ -133,13 +151,21 @@ private struct MessageRow: View {
                 }
             }
             if !message.text.isEmpty || message.streaming {
-                Text(message.text.isEmpty && message.streaming ? "..." : message.text)
-                    .textSelection(.enabled)
-                    .font(.system(size: 13))
-                    .foregroundStyle(message.role == .user ? .white : Theme.text)
-                    .padding(.horizontal, 11).padding(.vertical, 8)
-                    .background(message.role == .user ? AnyShapeStyle(Theme.accent) : AnyShapeStyle(Theme.elevated))
-                    .clipShape(RoundedRectangle(cornerRadius: Theme.radiusLg))
+                Group {
+                    if message.text.isEmpty && message.streaming {
+                        Text("...")
+                    } else if message.role == .assistant {
+                        Text(Self.markdown(message.text))
+                    } else {
+                        Text(message.text)
+                    }
+                }
+                .textSelection(.enabled)
+                .font(.system(size: 13))
+                .foregroundStyle(message.role == .user ? .white : Theme.text)
+                .padding(.horizontal, 11).padding(.vertical, 8)
+                .background(message.role == .user ? AnyShapeStyle(Theme.accent) : AnyShapeStyle(Theme.elevated))
+                .clipShape(RoundedRectangle(cornerRadius: Theme.radiusLg))
             }
         }
         .frame(maxWidth: .infinity, alignment: message.role == .user ? .trailing : .leading)

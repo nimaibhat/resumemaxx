@@ -70,6 +70,10 @@ final class Sidecar {
         send(["type": "user", "text": text])
     }
 
+    func sendStop() {
+        send(["type": "stop"])
+    }
+
     func stop() {
         proc?.terminate()
         proc = nil

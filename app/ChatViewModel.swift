@@ -43,6 +43,11 @@ final class ChatViewModel: ObservableObject {
         thinking = true
     }
 
+    func stop() {
+        guard thinking else { return }
+        sidecar.sendStop()
+    }
+
     private func handle(_ obj: [String: Any]) {
         switch obj["type"] as? String {
         case "turn_start":

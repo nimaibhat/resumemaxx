@@ -21,6 +21,7 @@ let cfg = {
 let claudeSession = null;
 let oaiMessages = null; // multi-turn history for the OpenAI provider
 let busy = false;
+let currentAbort = null;
 const queue = [];
 
 function send(obj) { process.stdout.write(JSON.stringify(obj) + "\n"); }
@@ -104,6 +105,7 @@ async function runClaude(text) {
     includePartialMessages: true,
   };
   if (claudeSession) options.resume = claudeSession;
+  if (currentAbort) options.abortController = currentAbort;
   for await (const msg of query({ prompt: text, options })) {
     if (msg.session_id) claudeSession = msg.session_id;
     if (msg.type === "stream_event") {
@@ -168,58 +170,73 @@ async function runOpenAI(text) {
   else oaiMessages[0] = { role: "system", content: persona() };
   oaiMessages.push({ role: "user", content: text });
 
-  for (let step = 0; step < 25; step++) {
-    const stream = await client.chat.completions.create({
-      model: cfg.openaiModel || "gpt-4o",
-      messages: oaiMessages,
-      tools: OAI_TOOLS,
-      stream: true,
-    });
-    let content = "";
-    const calls = {}; // index -> {id, name, args}
-    for await (const chunk of stream) {
-      const d = chunk.choices[0]?.delta;
-      if (d?.content) { content += d.content; send({ type: "delta", text: d.content }); }
-      for (const tc of d?.tool_calls ?? []) {
-        const c = (calls[tc.index] ||= { id: "", name: "", args: "" });
-        if (tc.id) c.id = tc.id;
-        if (tc.function?.name) c.name = tc.function.name;
-        if (tc.function?.arguments) c.args += tc.function.arguments;
+  try {
+    for (let step = 0; step < 25; step++) {
+      const stream = await client.chat.completions.create({
+        model: cfg.openaiModel || "gpt-4o",
+        messages: oaiMessages,
+        tools: OAI_TOOLS,
+        stream: true,
+      }, { signal: currentAbort?.signal });
+      let content = "";
+      const calls = {}; // index -> {id, name, args}
+      for await (const chunk of stream) {
+        const d = chunk.choices[0]?.delta;
+        if (d?.content) { content += d.content; send({ type: "delta", text: d.content }); }
+        for (const tc of d?.tool_calls ?? []) {
+          const c = (calls[tc.index] ||= { id: "", name: "", args: "" });
+          if (tc.id) c.id = tc.id;
+          if (tc.function?.name) c.name = tc.function.name;
+          if (tc.function?.arguments) c.args += tc.function.arguments;
+        }
+      }
+      const toolCalls = Object.values(calls);
+      if (toolCalls.length === 0) {
+        oaiMessages.push({ role: "assistant", content });
+        send({ type: "turn_done", error: false });
+        return;
+      }
+      oaiMessages.push({
+        role: "assistant",
+        content: content || null,
+        tool_calls: toolCalls.map((c) => ({ id: c.id, type: "function", function: { name: c.name, arguments: c.args || "{}" } })),
+      });
+      for (const c of toolCalls) {
+        let args = {};
+        try { args = JSON.parse(c.args || "{}"); } catch {}
+        send({ type: "tool", name: c.name, summary: toolSummary(c.name, args) });
+        const result = await callOAITool(c.name, args);
+        oaiMessages.push({ role: "tool", tool_call_id: c.id, content: String(result) });
       }
     }
-    const toolCalls = Object.values(calls);
-    if (toolCalls.length === 0) {
-      oaiMessages.push({ role: "assistant", content });
-      send({ type: "turn_done", error: false });
+    send({ type: "turn_done", error: false });
+  } catch (e) {
+    if (currentAbort?.signal.aborted) {
+      oaiMessages.push({ role: "assistant", content: "(stopped)" });
+      send({ type: "turn_done", error: false, stopped: true });
       return;
     }
-    oaiMessages.push({
-      role: "assistant",
-      content: content || null,
-      tool_calls: toolCalls.map((c) => ({ id: c.id, type: "function", function: { name: c.name, arguments: c.args || "{}" } })),
-    });
-    for (const c of toolCalls) {
-      let args = {};
-      try { args = JSON.parse(c.args || "{}"); } catch {}
-      send({ type: "tool", name: c.name, summary: toolSummary(c.name, args) });
-      const result = await callOAITool(c.name, args);
-      oaiMessages.push({ role: "tool", tool_call_id: c.id, content: String(result) });
-    }
+    throw e;
   }
-  send({ type: "turn_done", error: false });
 }
 
 // ============================== dispatch ===================================
 async function runTurn(text) {
   busy = true;
+  currentAbort = new AbortController();
   send({ type: "turn_start" });
   try {
     if (cfg.provider === "openai") await runOpenAI(text);
     else await runClaude(text);
   } catch (e) {
-    send({ type: "error", message: String(e?.message ?? e) });
-    send({ type: "turn_done", error: true });
+    if (currentAbort?.signal.aborted) {
+      send({ type: "turn_done", error: false, stopped: true });
+    } else {
+      send({ type: "error", message: String(e?.message ?? e) });
+      send({ type: "turn_done", error: true });
+    }
   } finally {
+    currentAbort = null;
     busy = false;
     pump();
   }
@@ -246,6 +263,8 @@ rl.on("line", (line) => {
   } else if (m.type === "user" && typeof m.text === "string") {
     queue.push(m.text);
     pump();
+  } else if (m.type === "stop") {
+    currentAbort?.abort();
   }
 });
 

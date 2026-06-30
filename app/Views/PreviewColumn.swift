@@ -3,6 +3,7 @@ import SwiftUI
 struct PreviewColumn: View {
     @ObservedObject var app: AppState
     @StateObject private var pdf = PDFController()
+    @State private var showSnapshots = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -11,6 +12,7 @@ struct PreviewColumn: View {
             content
         }
         .background(Theme.bg)
+        .sheet(isPresented: $showSnapshots) { SnapshotsSheet(app: app) }
     }
 
     private var toolbar: some View {
@@ -41,6 +43,8 @@ struct PreviewColumn: View {
                 }
                 Divider().frame(height: 14).overlay(Theme.border)
             }
+            iconButton("clock.arrow.circlepath", "Version history") { showSnapshots = true }
+                .disabled(app.selected == nil)
             // Code view toggle (small icon, top-right).
             iconButton(app.showingCode ? "doc.richtext" : "chevron.left.forwardslash.chevron.right",
                        app.showingCode ? "Show PDF" : "View source",
