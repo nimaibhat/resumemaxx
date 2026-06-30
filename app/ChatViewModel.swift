@@ -7,6 +7,7 @@ final class ChatViewModel: ObservableObject {
     @Published var thinking = false
 
     var onTurnComplete: (() -> Void)?
+    var provider = ProviderConfig.defaultClaude
 
     private let sidecar = Sidecar()
 
@@ -22,7 +23,8 @@ final class ChatViewModel: ObservableObject {
         sidecar.sendConfig(
             cwd: resume.url.deletingLastPathComponent().path,
             texPath: resume.url.path,
-            name: resume.url.lastPathComponent
+            name: resume.url.lastPathComponent,
+            provider: provider
         )
     }
 
@@ -30,7 +32,7 @@ final class ChatViewModel: ObservableObject {
     func configureFolder(_ url: URL) {
         messages.removeAll()
         thinking = false
-        sidecar.sendConfig(cwd: url.path, texPath: nil, name: url.lastPathComponent)
+        sidecar.sendConfig(cwd: url.path, texPath: nil, name: url.lastPathComponent, provider: provider)
     }
 
     func send(_ text: String) {

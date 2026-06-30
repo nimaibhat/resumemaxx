@@ -4,15 +4,19 @@ struct ChatPanel: View {
     @ObservedObject var app: AppState
     @ObservedObject var chat: ChatViewModel
     @State private var input = ""
+    @State private var showSettings = false
+    @State private var showTailor = false
 
     var body: some View {
         VStack(spacing: 0) {
             header
-            Divider().overlay(Theme.bg2)
+            Divider().overlay(Theme.border)
             messages
             inputBar
         }
         .background(Theme.bg)
+        .sheet(isPresented: $showSettings) { SettingsView(app: app) }
+        .sheet(isPresented: $showTailor) { TailorSheet(app: app) }
     }
 
     private var header: some View {
@@ -23,12 +27,26 @@ struct ChatPanel: View {
             Text("Assistant")
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(Theme.text)
+            Text(app.provider.label)
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundStyle(Theme.textSecondary)
+                .padding(.horizontal, 5).padding(.vertical, 1.5)
+                .background(Theme.elevated)
+                .clipShape(Capsule())
             Spacer()
-            if let r = app.selected {
-                Text(r.name).font(.system(size: 11)).foregroundStyle(Theme.textMuted)
-            } else if !chat.ready {
-                Text("starting...").font(.system(size: 11)).foregroundStyle(Theme.textMuted)
+            Button { showTailor = true } label: {
+                Image(systemName: "scope").font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
+                    .frame(width: 20, height: 20).contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .disabled(app.selected == nil)
+            .help("Tailor to a job description")
+            Button { showSettings = true } label: {
+                Image(systemName: "gearshape").font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
+                    .frame(width: 20, height: 20).contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help("Settings")
         }
         .padding(.horizontal, 12)
         .frame(height: 34)

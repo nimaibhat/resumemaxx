@@ -55,9 +55,14 @@ final class Sidecar {
         inPipe.fileHandleForWriting.write(data)
     }
 
-    func sendConfig(cwd: String, texPath: String?, name: String) {
-        var obj: [String: Any] = ["type": "config", "cwd": cwd, "name": name]
+    func sendConfig(cwd: String, texPath: String?, name: String, provider: ProviderConfig) {
+        var obj: [String: Any] = [
+            "type": "config", "cwd": cwd, "name": name,
+            "provider": provider.provider.rawValue,
+            "openaiModel": provider.openaiModel,
+        ]
         if let texPath { obj["texPath"] = texPath }
+        if let key = provider.openaiKey, !key.isEmpty { obj["openaiKey"] = key }
         send(obj)
     }
 

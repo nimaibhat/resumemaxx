@@ -32,6 +32,27 @@ final class AppState: ObservableObject {
         }
     }
 
+    // Provider settings (persisted).
+    @Published var provider: Provider {
+        didSet { UserDefaults.standard.set(provider.rawValue, forKey: "provider") }
+    }
+    @Published var openaiKey: String {
+        didSet { UserDefaults.standard.set(openaiKey, forKey: "openaiKey") }
+    }
+    @Published var openaiModel: String {
+        didSet { UserDefaults.standard.set(openaiModel, forKey: "openaiModel") }
+    }
+
+    func providerConfig() -> ProviderConfig {
+        ProviderConfig(provider: provider, openaiKey: openaiKey, openaiModel: openaiModel.isEmpty ? "gpt-4o" : openaiModel)
+    }
+
+    // Re-send config (and reset the conversation) after a provider change.
+    func reconfigureChat() {
+        chat.provider = providerConfig()
+        if let r = selected { chat.configure(r) }
+    }
+
     let chat = ChatViewModel()
 
     private var watcher: FileWatcher?
@@ -44,12 +65,18 @@ final class AppState: ObservableObject {
         let def = home.appendingPathComponent("Documents/resumes")
         folder = FileManager.default.fileExists(atPath: def.path) ? def : home
         sortMode = SortMode(rawValue: UserDefaults.standard.string(forKey: "sortMode") ?? "") ?? .modified
+        let d = UserDefaults.standard
+        provider = Provider(rawValue: d.string(forKey: "provider") ?? "") ?? .claude
+        openaiKey = d.string(forKey: "openaiKey") ?? ""
+        openaiModel = d.string(forKey: "openaiModel") ?? "gpt-4o"
         rescan()
+        chat.provider = providerConfig()
         chat.onTurnComplete = { [weak self] in self?.rescan() } // agent may have changed files
     }
 
     func organizeLibrary() {
         guard chat.ready else { return }
+        chat.provider = providerConfig()
         chat.configureFolder(folder)
         selected = nil; pdfURL = nil; compileError = nil; pageCount = 0; watcher?.stop()
         chat.send(
@@ -231,6 +258,7 @@ final class AppState: ObservableObject {
         status = "compiling"
         compileError = nil
         recompile(initial: true)
+        chat.provider = providerConfig()
         chat.configure(resume)
         opened[resume.url.path] = Date().timeIntervalSince1970
         UserDefaults.standard.set(opened, forKey: "openedDates")
@@ -240,6 +268,18 @@ final class AppState: ObservableObject {
     func askAssistantToFix() {
         guard let err = compileError else { return }
         chat.send("The resume fails to compile with this LaTeX error:\n\n\(err)\n\nPlease fix it in the file.")
+    }
+
+    func tailorToJob(_ jd: String) {
+        let text = jd.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty, selected != nil else { return }
+        chat.send(
+            "Tailor my resume to the job description below. Reorder and rewrite bullet points to " +
+            "emphasize the most relevant experience and match the role's important keywords and " +
+            "priorities. Stay truthful (do not invent experience) and keep it to ONE page — use the " +
+            "resume_report tool to verify after editing. Then give a short summary of what you changed.\n\n" +
+            "JOB DESCRIPTION:\n\(text)"
+        )
     }
 
     private func scheduleRecompile() {
